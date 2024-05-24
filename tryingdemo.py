@@ -446,6 +446,14 @@ enddate = "2024-01-15"
 mem_days = 25
 results_df = pd.DataFrame([])
 
+stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
+          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
+          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
+startdate = "2023-01-15"
+enddate = "2024-01-15"
+mem_days = 25
+results_df = pd.DataFrame([])
+
 def calculate_selected_indicators(data):
     delta = data['Close'].diff()
     up, down = delta.clip(lower=0), -delta.clip(upper=0)
@@ -473,7 +481,7 @@ class LSTMBasedStrategy(Strategy):
             self.buy()
         elif self.prediction[-1] == 0 and not self.position.is_short:
             self.sell()
-    
+
 for stock in stocks: 
     df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
@@ -498,8 +506,6 @@ for stock in stocks:
     new_df['ID'] = stock
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
-st.write(results_df)   
 st.write(results_df)
-
 
 
