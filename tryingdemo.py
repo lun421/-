@@ -333,8 +333,6 @@ string_io = io.StringIO()
 model.summary(print_fn=lambda x: string_io.write(x + "\n"))
 summary_string = string_io.getvalue()
 st.text(summary_string)
-    
-
 
 code = '''
 model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
