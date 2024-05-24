@@ -427,7 +427,7 @@ for i in stocks:
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
 
-    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
+    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID']=i
@@ -438,14 +438,6 @@ st.code(code, language='python')
 
 
 #coding for df
-stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
-          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
-startdate = "2023-01-15"
-enddate = "2024-01-15"
-mem_days = 25
-results_df = pd.DataFrame([])
-
 stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
           'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
           'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
@@ -500,7 +492,7 @@ for stock in stocks:
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
-    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
+    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID'] = stock
