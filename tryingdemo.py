@@ -16,7 +16,7 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, LSTM, Dropout, Input
 from keras.callbacks import ModelCheckpoint, LambdaCallback
 from backtesting import Backtest, Strategy
-
+import io
 #標題還有其他雜七雜八
 st.title('期末專題報告Demo：第12組')
 st.markdown('組長：  \n徐睿延 110099029')
@@ -329,6 +329,12 @@ st.code(code, language='python')
 #loading model
 model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
 model = load_model(model_path)
+string_io = io.StringIO()
+model.summary(print_fn=lambda x: string_io.write(x + "\n"))
+summary_string = string_io.getvalue()
+st.text(summary_string)
+
+
 
 code = '''
 model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
@@ -337,7 +343,7 @@ model.summary()
 '''
 st.header("Loading Model for Backtest", divider='grey')
 st.code(code, language='python')
-st.write(model.summary)
+
 
 
 
