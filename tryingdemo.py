@@ -440,11 +440,11 @@ st.code(code, language='python')
 #coding for df
 stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
           'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC','NFLX']
+          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
 startdate = "2023-01-15"
 enddate = "2024-01-15"
 mem_days = 25
-results_df=pd.DataFrame([])
+results_df = pd.DataFrame([])
 
 def calculate_selected_indicators(data):
     delta = data['Close'].diff()
@@ -473,29 +473,18 @@ class LSTMBasedStrategy(Strategy):
             self.buy()
         elif self.prediction[-1] == 0 and not self.position.is_short:
             self.sell()
-    #print(X)
     
-for i in stocks: 
-    df = pd.concat(
-        [yf.download(i, start=startdate, end=enddate, progress=False).assign(Stock=stock)
-         for stock in i],
-        axis=0)
-
+for stock in stocks: 
+    df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
-
     df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-
     features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
 
     Backtest_scaler = StandardScaler()
     Backtest_scaler.fit(df[features])
     scaled_features = Backtest_scaler.transform(df[features])
 
-      
-
     X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
-
-    #print("Shape of X:", X.shape) 
 
     predictions = model.predict(X)
     predicted_classes = (predictions > 0.5).astype(int).flatten()
@@ -503,14 +492,13 @@ for i in stocks:
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
-    #print("Length of full_predictions:", len(full_predictions))
-
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
     results = bt.run()
     new_df = pd.DataFrame([results])
-    new_df['ID']=i
+    new_df['ID'] = stock
     results_df = pd.concat([results_df, new_df], ignore_index=True)
-    
+
+st.write(results_df)   
 st.write(results_df)
 
 
