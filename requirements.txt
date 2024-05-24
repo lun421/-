@@ -4,9 +4,7 @@ pandas
 numpy
 yfinance
 scikit-learn
-keras
 backtesting
 pandas_datareader
-tensorflow
 tensorflow==2.16.1
 keras==2.16.1
