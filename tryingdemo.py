@@ -337,7 +337,6 @@ model.summary()
 '''
 st.header("Loading Model for Backtest", divider='grey')
 st.code(code, language='python')
-st.write(model.summary())
 
 
 
