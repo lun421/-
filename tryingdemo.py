@@ -329,11 +329,18 @@ st.code(code, language='python')
 
 #loading model
 model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
+
+
+code = '''
+model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
+model = load_model(model_path)
+model.summary()
+'''
+st.header("Loading Model for Backtest", divider='grey')
+st.code(code, language='python')
+
 try:
-    model = load_model(model_path)
-    st.write("Model loaded successfully!")
-    
-    # 获取模型的详细信息
+    model = load_model(model_path)    
     string_io = io.StringIO()
     with contextlib.redirect_stdout(string_io):
         model.summary()
@@ -344,16 +351,6 @@ except ValueError as e:
     st.error(f"Error loading the model: {e}")
 except Exception as e:
     st.error(f"Unexpected error: {e}")
-
-code = '''
-model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
-model = load_model(model_path)
-model.summary()
-'''
-st.header("Loading Model for Backtest", divider='grey')
-st.code(code, language='python')
-
-
 
 
 
