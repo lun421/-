@@ -6,3 +6,4 @@ yfinance
 scikit-learn
 keras
 backtesting
+pandas_datareader
