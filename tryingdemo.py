@@ -328,8 +328,6 @@ st.header("LSTM modeling", divider='grey')
 st.code(code, language='python')
 
 #loading model
-model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
-
 
 code = '''
 model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
@@ -339,6 +337,7 @@ model.summary()
 st.header("Loading Model for Backtest", divider='grey')
 st.code(code, language='python')
 
+model_path = "val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras"
 try:
     model = load_model(model_path)    
     string_io = io.StringIO()
