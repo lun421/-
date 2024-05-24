@@ -18,6 +18,7 @@ from keras.callbacks import ModelCheckpoint, LambdaCallback
 from backtesting import Backtest, Strategy
 import io
 import contextlib
+
 #標題還有其他雜七雜八
 st.title('期末專題報告Demo：第12組')
 st.markdown('組長：  \n徐睿延 110099029')
@@ -350,6 +351,90 @@ except ValueError as e:
     st.error(f"Error loading the model: {e}")
 except Exception as e:
     st.error(f"Unexpected error: {e}")
+
+
+#def stock indicator
+code = '''
+def calculate_selected_indicators(data):
+    delta = data['Close'].diff()
+    up, down = delta.clip(lower=0), -delta.clip(upper=0)
+    ma_up = up.rolling(window=14).mean()
+    ma_down = down.rolling(window=14).mean()
+    data['RSI'] = 100 - (100 / (1 + ma_up / ma_down))
+
+    exp1 = data['Close'].ewm(span=12, adjust=False).mean()
+    exp2 = data['Close'].ewm(span=26, adjust=False).mean()
+    macd = exp1 - exp2
+    data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
+
+    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
+
+    data.dropna(inplace=True)
+    return data
+'''
+st.header("Backtesting Stocks' Indicators", divider='grey')
+st.code(code, language='python')
+
+
+#BTEST
+code = '''
+class LSTMBasedStrategy(Strategy):
+    def init(self):
+        self.prediction = self.I(lambda x: x, full_predictions)
+
+    def next(self):
+        if self.prediction[-1] == 1 and not self.position.is_long:
+            self.buy()
+        elif self.prediction[-1] == 0 and not self.position.is_short:
+            self.sell()
+'''
+st.header("Model Backtesting", divider='grey')
+st.code(code, language='python')
+
+#testing all stocks
+code = '''
+stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
+          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
+          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC','NFLX']
+startdate = "2023-01-15"
+enddate = "2024-01-15"
+mem_days = 25
+results_df=pd.DataFrame([])
+
+for i in stocks: 
+    df = pd.concat(
+        [yf.download(i, start=startdate, end=enddate, progress=False).assign(Stock=stock)
+         for stock in i],
+        axis=0)
+
+    df = calculate_selected_indicators(df)
+
+    df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
+
+    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+
+    Backtest_scaler = StandardScaler()
+    Backtest_scaler.fit(df[features])
+    scaled_features = Backtest_scaler.transform(df[features])
+
+    X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
+
+    predictions = model.predict(X)
+    predicted_classes = (predictions > 0.5).astype(int).flatten()
+
+    full_predictions = np.zeros(len(df))
+    full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
+
+
+    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
+    results = bt.run()
+    new_df = pd.DataFrame([results])
+    new_df['ID']=i
+    results_df = pd.concat([results_df, new_df], ignore_index=True)
+'''
+st.header("Backtesting Stocks", divider='grey')
+st.code(code, language='python')
 
 
 
