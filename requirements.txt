@@ -1,9 +1,11 @@
 streamlit
-matplotlib
-pandas
 numpy
+pandas
+matplotlib
 yfinance
-scikit-learn
-backtesting
 pandas_datareader
+joblib
+scikit-learn
+keras
 tensorflow==2.16.1
+backtesting
