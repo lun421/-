@@ -67,21 +67,24 @@ st.code(code, language='python')
 #progress代表讀的時候不要有進度條
 #assign是pandas對於DF的一個添加方法，添加股票代碼進到DF裡面
 #選用2021-2023兩年資料進行建模，後續再用2023整年資料回測
-with st.echo():
-          stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
-                    'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-                    'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
-          
-          startdate = "2021-01-01"
-          enddate = "2023-01-01"
-          
-          data = pd.concat(
-              [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
-               for stock in stocks],
-              axis=0
-          )
 st.header("Reading Stock Data for Modeling", divider='grey')
 st.markdown("Choosing Top25 Companies in S&P500 by Index Weight")
+with st.echo():
+    # List of stocks
+    stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
+              'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
+              'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
+
+    # Start and end dates
+    startdate = "2021-01-01"
+    enddate = "2023-01-01"
+
+    data = pd.concat(
+        [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
+         for stock in stocks],
+        axis=0
+    )
+
 st.dataframe(data)
 
 
