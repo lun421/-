@@ -156,6 +156,7 @@ data.loc[(data['%K'].shift(1) < data['%D3'].shift(1)) & (data['%K'] > data['%D3'
 data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3']), 'KD_Signal_3'] = -1
 data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
 data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
+
 code = '''
 # RSI 相對強弱指標
 data['Close_delta'] = data['Close'].diff()
@@ -246,7 +247,7 @@ data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3'
 data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
 data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
 '''
-st.code(code,language-'python'
+st.code(code,language='python')
 st.code('print(data)',language='python')
 st.dataframe(data)
 
