@@ -468,7 +468,7 @@ class LSTMBasedStrategy(Strategy):
             self.buy()
         elif self.prediction[-1] == 0 and not self.position.is_short:
             self.sell()
-
+from io import BytesIO
 for stock in stocks: 
     df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
@@ -492,24 +492,18 @@ for stock in stocks:
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID'] = stock
-<<<<<<< HEAD
+
     new_df.insert(0, 'ID', new_df.pop('ID'))  
     results_df = pd.concat([results_df, new_df], ignore_index=True)
-
+    if stock == 'MSFT':
+        fig = bt.plot()
+        fig_file = BytesIO()
+        plt.savefig(fig_file)
+        st.image(fig_file, caption='Backtest result')
+        
 st.dataframe(results_df)
 
-fig = bt.plot()
-from io import BytesIO
-fig_file = BytesIO()
-plt.savefig(fig_file)
-st.image(fig_file, caption='Backtest result')
 
-=======
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
 
-cols = results_df.columns.tolist()
-cols.insert(0, cols.pop(cols.index('ID')))
-results_df = results_df[cols]
 
-st.dataframe(results_df)
->>>>>>> aeeed86f6a3a8947bead483c701bab6ee155343c
+
