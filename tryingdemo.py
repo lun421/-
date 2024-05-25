@@ -487,10 +487,12 @@ for stock in stocks:
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
+
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID'] = stock
+<<<<<<< HEAD
     new_df.insert(0, 'ID', new_df.pop('ID'))  
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
@@ -502,3 +504,12 @@ fig_file = BytesIO()
 plt.savefig(fig_file)
 st.image(fig_file, caption='Backtest result')
 
+=======
+    results_df = pd.concat([results_df, new_df], ignore_index=True)
+
+cols = results_df.columns.tolist()
+cols.insert(0, cols.pop(cols.index('ID')))
+results_df = results_df[cols]
+
+st.dataframe(results_df)
+>>>>>>> aeeed86f6a3a8947bead483c701bab6ee155343c
