@@ -21,7 +21,7 @@ import contextlib
 
 
 
-st.title('Stock Backtesting Using LSTM Model')
+st.title('LSTM Model Stock Backtesting')
 st.header('期末專題報告Demo · 第12組')
 st.markdown('組長：  \n徐睿延 110099029')
 st.markdown(f"組員：  \n陳冠倫 110072250  \n陳亮廷 110072224  \n宋宇然 110072206  \n張稚婕 111042013  \n賀守聖 111042038")
@@ -82,6 +82,7 @@ data = pd.concat(
 )
 '''
 st.header("Reading Stock Data for Modeling", divider='grey')
+st.markdown("Choosing Top25 Companies in S&P500 by Index Weight")
 st.code(code, language='python')
 
 #計算指標
