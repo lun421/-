@@ -489,8 +489,8 @@ full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_class
 bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
 results = bt.run()
 btplt = bt.plot()
-st.pyplot(btplt)
 
+st.bokeh_chart(btplt)
 
 
 
