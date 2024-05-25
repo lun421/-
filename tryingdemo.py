@@ -19,8 +19,18 @@ from backtesting import Backtest, Strategy
 import io
 import contextlib
 import mpld3
+
+
+st.markdown("""
+<style>
+.centered-text {
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
 #標題還有其他雜七雜八
-st.title('期末專題報告Demo：第12組')
+st.title('<h1 class="centered-text">Stock Backtesting Using LSTM Model')
+st.header('<h2 class="centered-text">期末專題報告Demo · 第12組')
 st.markdown('組長：  \n徐睿延 110099029')
 st.markdown(f"組員：  \n陳冠倫 110072250  \n陳亮廷 110072224  \n宋宇然 110072206  \n張稚婕 111042013  \n賀守聖 111042038")
 
@@ -432,76 +442,7 @@ st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
 
 
-#coding for df
-stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
-          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
-startdate = "2023-01-15"
-enddate = "2024-01-15"
-mem_days = 25
-results_df = pd.DataFrame([])
 
-def calculate_selected_indicators(data):
-    delta = data['Close'].diff()
-    up, down = delta.clip(lower=0), -delta.clip(upper=0)
-    ma_up = up.rolling(window=14).mean()
-    ma_down = down.rolling(window=14).mean()
-    data['RSI'] = 100 - (100 / (1 + ma_up / ma_down))
-
-    exp1 = data['Close'].ewm(span=12, adjust=False).mean()
-    exp2 = data['Close'].ewm(span=26, adjust=False).mean()
-    macd = exp1 - exp2
-    data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
-
-    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
-    data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
-
-    data.dropna(inplace=True)
-    return data
-
-class LSTMBasedStrategy(Strategy):
-    def init(self):
-        self.prediction = self.I(lambda x: x, full_predictions)
-
-    def next(self):
-        if self.prediction[-1] == 1 and not self.position.is_long:
-            self.buy()
-        elif self.prediction[-1] == 0 and not self.position.is_short:
-            self.sell()
-from io import BytesIO
-for stock in stocks: 
-    df = yf.download(stock, start=startdate, end=enddate, progress=False)
-    df = calculate_selected_indicators(df)
-    df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
-
-    Backtest_scaler = StandardScaler()
-    Backtest_scaler.fit(df[features])
-    scaled_features = Backtest_scaler.transform(df[features])
-
-    X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
-
-    predictions = model.predict(X)
-    predicted_classes = (predictions > 0.5).astype(int).flatten()
-
-    full_predictions = np.zeros(len(df))
-    full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
-
-
-    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
-    results = bt.run()
-    new_df = pd.DataFrame([results])
-    new_df['ID'] = stock
-
-    new_df.insert(0, 'ID', new_df.pop('ID'))  
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
-    if stock == 'MSFT':
-        fig = bt.plot()
-        fig_file = BytesIO()
-        plt.savefig(fig_file)
-        st.image(fig_file, caption='Backtest result')
-        
-st.dataframe(results_df)
 
 
 
