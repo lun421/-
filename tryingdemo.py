@@ -402,16 +402,10 @@ enddate = "2024-01-15"
 mem_days = 25
 results_df=pd.DataFrame([])
 
-for i in stocks: 
-    df = pd.concat(
-        [yf.download(i, start=startdate, end=enddate, progress=False).assign(Stock=stock)
-         for stock in i],
-        axis=0)
-
+for stock in stocks: 
+    df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
-
     df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-
     features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
 
     Backtest_scaler = StandardScaler()
@@ -426,12 +420,13 @@ for i in stocks:
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
-
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
-    new_df['ID']=i
+    new_df['ID'] = stock
+    new_df.insert(0, 'ID', new_df.pop('ID'))
     results_df = pd.concat([results_df, new_df], ignore_index=True)
+
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
@@ -496,41 +491,11 @@ for stock in stocks:
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID'] = stock
+    new_df.insert(0, 'ID', new_df.pop('ID'))
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
 st.write(results_df)
 
-
-showstock = 'MSFT'
-startdate = "2023-01-15"
-enddate = "2024-01-15"
-mem_days = 25
-df = yf.download(showstock, start=startdate, end=enddate, progress=False)
-df = calculate_selected_indicators(df)
-df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
-
-Backtest_scaler = StandardScaler()
-Backtest_scaler.fit(df[features])
-scaled_features = Backtest_scaler.transform(df[features])
-
-X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
-
-predictions = model.predict(X)
-predicted_classes = (predictions > 0.5).astype(int).flatten()
-
-full_predictions = np.zeros(len(df))
-full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
-
-bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=0.0425)
-results = bt.run()
-
-# 生成图表
-fig = bt.plot()
-html_str = mpld3.fig_to_html(fig)
-st.components.v1.html(html_str, height=800)
-
-st.write(results)
 
 
 
