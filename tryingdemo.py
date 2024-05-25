@@ -494,6 +494,11 @@ for stock in stocks:
     new_df.insert(0, 'ID', new_df.pop('ID'))  
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
-st.write(results_df)
+st.dataframe(results_df)
 
+fig = bt.plot()
+from io import BytesIO
+fig_file = BytesIO()
+plt.savefig(fig_file)
+st.image(fig_file, caption='Backtest result')
 
