@@ -1,25 +1,4 @@
 import streamlit as st
-import numpy as np
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
-import yfinance as yf
-yf.pdr_override()
-import pandas_datareader.data as pdr
-from joblib import dump, load
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
-from collections import deque
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM, Dropout, Input
-from keras.callbacks import ModelCheckpoint, LambdaCallback
-from backtesting import Backtest, Strategy
-import io
-import contextlib
-
-
 
 st.title('LSTM Model Stock Backtesting')
 st.header('期末專題報告Demo · 第12組')
@@ -27,40 +6,38 @@ st.markdown('組長：  \n徐睿延 110099029')
 st.markdown(f"組員：  \n陳冠倫 110072250  \n陳亮廷 110072224  \n宋宇然 110072206  \n張稚婕 111042013  \n賀守聖 111042038")
 
 # import
-code = '''
-import numpy as np
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
-import yfinance as yf
-yf.pdr_override()
-import pandas_datareader.data as pdr
-
-# 指標選擇用
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-
-# 模型資料處理用
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
-from joblib import dump, load
-
-#模型窗口設置用
-from collections import deque
-
-# 模型建立與訓練用
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM, Dropout, Input
-from keras.callbacks import ModelCheckpoint, LambdaCallback
-
-# 回測用
-from backtesting import Backtest, Strategy
-
-#建立Web應用程式用
-import streamlit as st
-'''
 st.header("Importing Modules", divider='grey')
-st.code(code, language='python')
+with st.echo():
+    import numpy as np
+    import pandas as pd
+    import os
+    import matplotlib.pyplot as plt
+    import yfinance as yf
+    yf.pdr_override()
+    import pandas_datareader.data as pdr
+    import io
+    
+    # 指標選擇用
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.feature_selection import RFE
+    
+    # 模型資料處理用
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import train_test_split, cross_val_score
+    from joblib import dump, load
+    
+    #模型窗口設置用
+    from collections import deque
+    
+    # 模型建立與訓練用
+    from keras.models import Sequential, load_model
+    from keras.layers import Dense, LSTM, Dropout, Input
+    from keras.callbacks import ModelCheckpoint, LambdaCallback
+    import contextlib
+    
+    # 回測用
+    from backtesting import Backtest, Strategy
+    
 
 #讀stock
 #concat是將所有的股票數據按行合併成一個DF
@@ -84,11 +61,80 @@ with st.echo():
          for stock in stocks],
         axis=0
     )
-
+st.code('print(data)',language='python')
 st.dataframe(data)
 
 
+
+
+
 #計算指標
+# RSI 相對強弱指標
+data['Close_delta'] = data['Close'].diff()
+data['Up'] = data['Close_delta'].clip(lower=0)
+data['Down'] = -1 * data['Close_delta'].clip(upper=0)
+data['Ma_up'] = data['Up'].transform(lambda x: x.rolling(window=14).mean())
+data['Ma_down'] = data['Down'].transform(lambda x: x.rolling(window=14).mean())
+data['RSI'] = data['Ma_up'] / (data['Ma_up'] + data['Ma_down']) * 100
+
+# MACD 平滑異同移動平均線指標 (背離指標)
+data['Exp1'] = data['Close'].transform(lambda x: x.ewm(span=12, adjust=False).mean())
+data['Exp2'] = data['Close'].transform(lambda x: x.ewm(span=26, adjust=False).mean())
+data['Macd'] = data['Exp1'] - data['Exp2'] # Moving Average Convergence Divergence
+data['Macdsig'] = data['Macd'].transform(lambda x: x.ewm(span=9, adjust=False).mean()) # MACD Signal Line
+data['Macdhist'] = data['Macd'] - data['Macdsig'] # MACD Histogram
+
+# Momentum 動能指標
+data['Momentum'] = data['Close'].transform(lambda x: x.diff(periods=15))
+
+# ATR 真實波動幅度均值
+data['High_low'] = data['High'] - data['Low']
+data['High_close'] = abs(data['High'] - data['Close'].shift())
+data['Low_close'] = abs(data['Low'] - data['Close'].shift())
+data['Tr'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
+data['ATR'] = data['Tr'].rolling(window=14).mean()
+
+# ROC 價格變動率
+data['ROC'] = data['Close'].pct_change(periods=10) * 100
+
+# DMI 動向指標
+data['+DM'] = np.where((data['High'] - data['High'].shift()) > (data['Low'].shift() - data['Low']), data['High'] - data['High'].shift(), 0)
+data['-DM'] = np.where((data['Low'].shift() - data['Low']) > (data['High'] - data['High'].shift()), data['Low'].shift() - data['Low'], 0)
+data['+DM'] = data['+DM'].where(data['+DM'] > data['-DM'], 0)
+data['-DM'] = data['-DM'].where(data['-DM'] > data['+DM'], 0)
+data['TR'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
+data['+DI'] = 100 * data['+DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
+data['-DI'] = 100 * data['-DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
+data['ADX'] = abs((data['+DI'] - data['-DI']) / (data['+DI'] + data['-DI']) * 100).rolling(window=14).mean()
+
+# VWAP 成交量加權平均
+data['Cumulative_Volume'] = data['Volume'].cumsum()
+data['Cumulative_Volume_Price'] = (data['Close'] * data['Volume']).cumsum()
+data['VWAP'] = data['Cumulative_Volume_Price'] / data['Cumulative_Volume']
+
+# AD-line 漲跌趨勢線指標
+data['Advance'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x > 0 else 0)
+data['Decline'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x < 0 else 0)
+data['AD_Line_pre'] = data['Advance'] - data['Decline']
+data['AD_Line'] = data['AD_Line_pre'].cumsum()
+
+# EMA 指數平滑移動平均線
+data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
+data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
+
+
+# Stochastic Oscillator 隨機指標(KD)
+data['Low_n'] = data['Low'].rolling(window=14).min() #常用週期14天
+data['High_n'] = data['High'].rolling(window=14).max()
+data['%K'] = 100 * ((data['Close'] - data['Low_n']) / (data['High_n'] - data['Low_n']))
+data['%D3'] = data['%K'].rolling(window=3).mean() #短三日SMA
+data['%D5'] = data['%K'].rolling(window=5).mean() #短五日SMA
+data['KD_Signal_3'] = data['KD_Signal_5'] = 0
+data.loc[(data['%K'].shift(1) < data['%D3'].shift(1)) & (data['%K'] > data['%D3']), 'KD_Signal_3'] = 1
+data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3']), 'KD_Signal_3'] = -1
+data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
+data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
+
 code = '''
 # RSI 相對強弱指標
 data['Close_delta'] = data['Close'].diff()
@@ -141,31 +187,7 @@ data['AD_Line'] = data['AD_Line_pre'].cumsum()
 
 # EMA 指數平滑移動平均線
 data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
-data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
-data['EMA_12'] = data['Close'].ewm(span=12, adjust=False).mean()
-data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
 data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
-data['EMA_26'] = data['Close'].ewm(span=26, adjust=False).mean()
-# 前一天的EMA
-data['EMA_9_prev'] = data['EMA_9'].shift(1)
-data['EMA_12_prev'] = data['EMA_12'].shift(1)
-data['EMA_20_prev'] = data['EMA_20'].shift(1)
-data['EMA_50_prev'] = data['EMA_50'].shift(1)
-data['EMA_26_prev'] = data['EMA_26'].shift(1)
-#信號
-data['912EMA_Signal'] = 0
-data['2050EMA_Signal'] = 0
-data['1226EMA_Signal'] = 0
-# 計算 EMA 9 和 EMA 12 之間的交叉信號
-data.loc[(data['EMA_9_prev'] < data['EMA_12_prev']) & (data['EMA_9'] > data['EMA_12']), '912EMA_Signal'] = 1
-data.loc[(data['EMA_9_prev'] > data['EMA_12_prev']) & (data['EMA_9'] < data['EMA_12']), '912EMA_Signal'] = -1
-# 計算 EMA 20 和 EMA 50 之間的交叉信號
-data.loc[(data['EMA_20_prev'] < data['EMA_50_prev']) & (data['EMA_20'] > data['EMA_50']), '2050EMA_Signal'] = 1
-data.loc[(data['EMA_20_prev'] > data['EMA_50_prev']) & (data['EMA_20'] < data['EMA_50']), '2050EMA_Signal'] = -1
-# 計算 EMA 12 和 EMA 26 之間的交叉信號
-data.loc[(data['EMA_12_prev'] < data['EMA_26_prev']) & (data['EMA_12'] > data['EMA_26']), '1226EMA_Signal'] = 1
-data.loc[(data['EMA_12_prev'] > data['EMA_26_prev']) & (data['EMA_12'] < data['EMA_26']), '1226EMA_Signal'] = -1
-
 
 # Stochastic Oscillator 隨機指標(KD)
 data['Low_n'] = data['Low'].rolling(window=14).min() #常用週期14天
@@ -180,28 +202,32 @@ data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5'
 data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
 '''
 st.header("Calculating Indicators", divider='grey')
-st.code(code, language='python')
+st.code(code,language='python')
+st.code('print(data)',language='python')
+st.dataframe(data)
+
 
 #加權指標
 # 由於指標會出現NA，所以要處理掉 (比如十天平均，前九天就不會有資料)
 # 給label，如果明天股價高於今天，就給label=1，反之=0
-code='''
-# Cleaning NA
-data.ffill(inplace=True)
-data.dropna(inplace=True)
-
-# Labeling
-data['Label'] = np.where(data['Close'].shift(-1) > data['Close'], 1, 0)
-y = data['Label']
-
-# Scaling
-indicator_candidate = data[['Volume', 'RSI', 'Macdhist','Momentum','ATR',
-                            'ROC','ADX','VWAP','AD_Line','EMA_9','EMA_50']]
-indicator_scaler = StandardScaler()
-indicator_candidate_scaled = indicator_scaler.fit_transform(indicator_candidate)
-'''
 st.header("Scaling Indicators", divider='grey')
-st.code(code, language='python')
+with st.echo():
+# Cleaning NA
+    data.ffill(inplace=True)
+    data.dropna(inplace=True)
+    
+    # Labeling
+    data['Label'] = np.where(data['Close'].shift(-1) > data['Close'], 1, 0)
+    y = data['Label']
+    
+    # Scaling
+    indicator_candidate = data[['Volume', 'RSI', 'Macdhist','Momentum','ATR',
+                                'ROC','ADX','VWAP','AD_Line','EMA_3','EMA_50',
+                                'KD_Signal_3','KD_Signal_5']]
+    indicator_scaler = StandardScaler()
+    indicator_candidate_scaled = indicator_scaler.fit_transform(indicator_candidate)
+st.code('print(indicator_candidate_scaled)',language='python')
+st.dataframe(indicator_candidate_scaled)
 
 
 #指標隨機森林
@@ -219,7 +245,8 @@ feature_data = data[indicator_candidate.columns[selected_features].tolist() + ['
 '''
 st.header("Picking Indicators using Random Forest", divider='grey')
 st.code(code, language='python')
-st.code(f"Selected features: Index(['Volume', 'RSI', 'ROC', 'ADX', 'EMA_9'], dtype='object')")
+st.code(f"Selected features: Index(['Volume', 'RSI', 'Macdhist', 'EMA_3', 'EMA_50'], dtype='object')")
+
 
 #pre modeling
 code = '''
@@ -433,61 +460,3 @@ for stock in stocks:
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
 
-
-# model = load_model("val05584_mem25_lstm1_dense2_unit256_dropout010_batch32.keras")
-# def calculate_selected_indicators(data):
-#     delta = data['Close'].diff()
-#     up, down = delta.clip(lower=0), -delta.clip(upper=0)
-#     ma_up = up.rolling(window=14).mean()
-#     ma_down = down.rolling(window=14).mean()
-#     data['RSI'] = 100 - (100 / (1 + ma_up / ma_down))
-
-#     exp1 = data['Close'].ewm(span=12, adjust=False).mean()
-#     exp2 = data['Close'].ewm(span=26, adjust=False).mean()
-#     macd = exp1 - exp2
-#     data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
-
-#     data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
-#     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
-
-#     data.dropna(inplace=True)
-#     return data
-
-# class LSTMBasedStrategy(Strategy):
-#     def init(self):
-#         self.prediction = self.I(lambda x: x, full_predictions)
-
-#     def next(self):
-#         if self.prediction[-1] == 1 and not self.position.is_long:
-#             self.buy()
-#         elif self.prediction[-1] == 0 and not self.position.is_short:
-#             self.sell()
-
-# stock = 'MSFT'
-# startdate = "2023-01-15"
-# enddate = "2024-01-15"
-# mem_days = 25
-# results_df = pd.DataFrame([])
-
-# df = yf.download(stock, start=startdate, end=enddate, progress=False)
-# df = calculate_selected_indicators(df)
-# df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-# features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
-
-# Backtest_scaler = StandardScaler()
-# Backtest_scaler.fit(df[features])
-# scaled_features = Backtest_scaler.transform(df[features])
-
-# X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
-
-# predictions = model.predict(X)
-# predicted_classes = (predictions > 0.5).astype(int).flatten()
-
-# full_predictions = np.zeros(len(df))
-# full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
-
-# bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
-# results = bt.run()
-# btplt = bt.plot()
-
-# st.bokeh_chart(btplt)
