@@ -121,7 +121,30 @@ data['AD_Line'] = data['AD_Line_pre'].cumsum()
 # EMA 指數平滑移動平均線
 data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
 data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
-
+data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+data['EMA_12'] = data['Close'].ewm(span=12, adjust=False).mean()
+data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
+data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
+data['EMA_26'] = data['Close'].ewm(span=26, adjust=False).mean()
+# 前一天的EMA
+data['EMA_9_prev'] = data['EMA_9'].shift(1)
+data['EMA_12_prev'] = data['EMA_12'].shift(1)
+data['EMA_20_prev'] = data['EMA_20'].shift(1)
+data['EMA_50_prev'] = data['EMA_50'].shift(1)
+data['EMA_26_prev'] = data['EMA_26'].shift(1)
+#信號
+data['912EMA_Signal'] = 0
+data['2050EMA_Signal'] = 0
+data['1226EMA_Signal'] = 0
+# 計算 EMA 9 和 EMA 12 之間的交叉信號
+data.loc[(data['EMA_9_prev'] < data['EMA_12_prev']) & (data['EMA_9'] > data['EMA_12']), '912EMA_Signal'] = 1
+data.loc[(data['EMA_9_prev'] > data['EMA_12_prev']) & (data['EMA_9'] < data['EMA_12']), '912EMA_Signal'] = -1
+# 計算 EMA 20 和 EMA 50 之間的交叉信號
+data.loc[(data['EMA_20_prev'] < data['EMA_50_prev']) & (data['EMA_20'] > data['EMA_50']), '2050EMA_Signal'] = 1
+data.loc[(data['EMA_20_prev'] > data['EMA_50_prev']) & (data['EMA_20'] < data['EMA_50']), '2050EMA_Signal'] = -1
+# 計算 EMA 12 和 EMA 26 之間的交叉信號
+data.loc[(data['EMA_12_prev'] < data['EMA_26_prev']) & (data['EMA_12'] > data['EMA_26']), '1226EMA_Signal'] = 1
+data.loc[(data['EMA_12_prev'] > data['EMA_26_prev']) & (data['EMA_12'] < data['EMA_26']), '1226EMA_Signal'] = -1
 
 # Stochastic Oscillator 隨機指標(KD)
 data['Low_n'] = data['Low'].rolling(window=14).min() #常用週期14天
@@ -224,6 +247,7 @@ with st.echo():
     indicator_candidate = data[['Volume', 'RSI', 'Macdhist','Momentum','ATR',
                                 'ROC','ADX','VWAP','AD_Line','EMA_3','EMA_50',
                                 'KD_Signal_3','KD_Signal_5']]
+
     indicator_scaler = StandardScaler()
     indicator_candidate_scaled = indicator_scaler.fit_transform(indicator_candidate)
 st.code('print(indicator_candidate_scaled)',language='python')
@@ -459,4 +483,3 @@ for stock in stocks:
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
-
