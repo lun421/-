@@ -67,7 +67,6 @@ st.dataframe(data)
 
 
 #計算指標
-st.header("Calculating Indicators", divider='grey')
 # RSI 相對強弱指標
 data['Close_delta'] = data['Close'].diff()
 data['Up'] = data['Close_delta'].clip(lower=0)
@@ -247,6 +246,7 @@ data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3'
 data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
 data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
 '''
+st.header("Calculating Indicators", divider='grey')
 st.code(code,language='python')
 st.code('print(data)',language='python')
 st.dataframe(data)
