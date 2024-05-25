@@ -20,25 +20,9 @@ import io
 import contextlib
 
 
-st.title("""
-<style>
-.centered-text {
-    text-align: center;
-}
-</style>
-""", unsafe_allow_html=True)
 
-st.header("""
-<style>
-.centered-text {
-    text-align: center;
-}
-</style>
-""", unsafe_allow_html=True)
-
-#標題還有其他雜七雜八
-st.title('<h1 class="centered-text">Stock Backtesting Using LSTM Model')
-st.header('<h2 class="centered-text">期末專題報告Demo · 第12組')
+st.title('Stock Backtesting Using LSTM Model')
+st.header('期末專題報告Demo · 第12組')
 st.markdown('組長：  \n徐睿延 110099029')
 st.markdown(f"組員：  \n陳冠倫 110072250  \n陳亮廷 110072224  \n宋宇然 110072206  \n張稚婕 111042013  \n賀守聖 111042038")
 
