@@ -15,6 +15,7 @@ with st.echo():
     import yfinance as yf
     yf.pdr_override()
     import pandas_datareader.data as pdr
+    import io
     
     # 指標選擇用
     from sklearn.ensemble import RandomForestClassifier
