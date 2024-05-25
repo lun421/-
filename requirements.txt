@@ -1,11 +1,12 @@
 streamlit
 numpy
 pandas
+pandas_datareader
 matplotlib
 yfinance
-pandas_datareader
 joblib
 scikit-learn
 keras
 tensorflow==2.16.1
 backtesting
+keras==3.3.2
