@@ -37,9 +37,6 @@ with st.echo():
     from backtesting import Backtest, Strategy
     
 
-
-
-
 #讀stock
 #concat是將所有的股票數據按行合併成一個DF
 #progress代表讀的時候不要有進度條
@@ -70,98 +67,98 @@ st.dataframe(data)
 
 
 #計算指標
-code = '''
-# RSI 相對強弱指標
-data['Close_delta'] = data['Close'].diff()
-data['Up'] = data['Close_delta'].clip(lower=0)
-data['Down'] = -1 * data['Close_delta'].clip(upper=0)
-data['Ma_up'] = data['Up'].transform(lambda x: x.rolling(window=14).mean())
-data['Ma_down'] = data['Down'].transform(lambda x: x.rolling(window=14).mean())
-data['RSI'] = data['Ma_up'] / (data['Ma_up'] + data['Ma_down']) * 100
-
-# MACD 平滑異同移動平均線指標 (背離指標)
-data['Exp1'] = data['Close'].transform(lambda x: x.ewm(span=12, adjust=False).mean())
-data['Exp2'] = data['Close'].transform(lambda x: x.ewm(span=26, adjust=False).mean())
-data['Macd'] = data['Exp1'] - data['Exp2'] # Moving Average Convergence Divergence
-data['Macdsig'] = data['Macd'].transform(lambda x: x.ewm(span=9, adjust=False).mean()) # MACD Signal Line
-data['Macdhist'] = data['Macd'] - data['Macdsig'] # MACD Histogram
-
-# Momentum 動能指標
-data['Momentum'] = data['Close'].transform(lambda x: x.diff(periods=15))
-
-# ATR 真實波動幅度均值
-data['High_low'] = data['High'] - data['Low']
-data['High_close'] = abs(data['High'] - data['Close'].shift())
-data['Low_close'] = abs(data['Low'] - data['Close'].shift())
-data['Tr'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
-data['ATR'] = data['Tr'].rolling(window=14).mean()
-
-# ROC 價格變動率
-data['ROC'] = data['Close'].pct_change(periods=10) * 100
-
-# DMI 動向指標
-data['+DM'] = np.where((data['High'] - data['High'].shift()) > (data['Low'].shift() - data['Low']), data['High'] - data['High'].shift(), 0)
-data['-DM'] = np.where((data['Low'].shift() - data['Low']) > (data['High'] - data['High'].shift()), data['Low'].shift() - data['Low'], 0)
-data['+DM'] = data['+DM'].where(data['+DM'] > data['-DM'], 0)
-data['-DM'] = data['-DM'].where(data['-DM'] > data['+DM'], 0)
-data['TR'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
-data['+DI'] = 100 * data['+DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
-data['-DI'] = 100 * data['-DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
-data['ADX'] = abs((data['+DI'] - data['-DI']) / (data['+DI'] + data['-DI']) * 100).rolling(window=14).mean()
-
-# VWAP 成交量加權平均
-data['Cumulative_Volume'] = data['Volume'].cumsum()
-data['Cumulative_Volume_Price'] = (data['Close'] * data['Volume']).cumsum()
-data['VWAP'] = data['Cumulative_Volume_Price'] / data['Cumulative_Volume']
-
-# AD-line 漲跌趨勢線指標
-data['Advance'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x > 0 else 0)
-data['Decline'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x < 0 else 0)
-data['AD_Line_pre'] = data['Advance'] - data['Decline']
-data['AD_Line'] = data['AD_Line_pre'].cumsum()
-
-# EMA 指數平滑移動平均線
-data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
-data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
-data['EMA_12'] = data['Close'].ewm(span=12, adjust=False).mean()
-data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
-data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
-data['EMA_26'] = data['Close'].ewm(span=26, adjust=False).mean()
-# 前一天的EMA
-data['EMA_9_prev'] = data['EMA_9'].shift(1)
-data['EMA_12_prev'] = data['EMA_12'].shift(1)
-data['EMA_20_prev'] = data['EMA_20'].shift(1)
-data['EMA_50_prev'] = data['EMA_50'].shift(1)
-data['EMA_26_prev'] = data['EMA_26'].shift(1)
-#信號
-data['912EMA_Signal'] = 0
-data['2050EMA_Signal'] = 0
-data['1226EMA_Signal'] = 0
-# 計算 EMA 9 和 EMA 12 之間的交叉信號
-data.loc[(data['EMA_9_prev'] < data['EMA_12_prev']) & (data['EMA_9'] > data['EMA_12']), '912EMA_Signal'] = 1
-data.loc[(data['EMA_9_prev'] > data['EMA_12_prev']) & (data['EMA_9'] < data['EMA_12']), '912EMA_Signal'] = -1
-# 計算 EMA 20 和 EMA 50 之間的交叉信號
-data.loc[(data['EMA_20_prev'] < data['EMA_50_prev']) & (data['EMA_20'] > data['EMA_50']), '2050EMA_Signal'] = 1
-data.loc[(data['EMA_20_prev'] > data['EMA_50_prev']) & (data['EMA_20'] < data['EMA_50']), '2050EMA_Signal'] = -1
-# 計算 EMA 12 和 EMA 26 之間的交叉信號
-data.loc[(data['EMA_12_prev'] < data['EMA_26_prev']) & (data['EMA_12'] > data['EMA_26']), '1226EMA_Signal'] = 1
-data.loc[(data['EMA_12_prev'] > data['EMA_26_prev']) & (data['EMA_12'] < data['EMA_26']), '1226EMA_Signal'] = -1
-
-
-# Stochastic Oscillator 隨機指標(KD)
-data['Low_n'] = data['Low'].rolling(window=14).min() #常用週期14天
-data['High_n'] = data['High'].rolling(window=14).max()
-data['%K'] = 100 * ((data['Close'] - data['Low_n']) / (data['High_n'] - data['Low_n']))
-data['%D3'] = data['%K'].rolling(window=3).mean() #短三日SMA
-data['%D5'] = data['%K'].rolling(window=5).mean() #短五日SMA
-data['KD_Signal_3'] = data['KD_Signal_5'] = 0
-data.loc[(data['%K'].shift(1) < data['%D3'].shift(1)) & (data['%K'] > data['%D3']), 'KD_Signal_3'] = 1
-data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3']), 'KD_Signal_3'] = -1
-data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
-data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
-'''
 st.header("Calculating Indicators", divider='grey')
-st.code(code, language='python')
+with st.echo():
+    # RSI 相對強弱指標
+    data['Close_delta'] = data['Close'].diff()
+    data['Up'] = data['Close_delta'].clip(lower=0)
+    data['Down'] = -1 * data['Close_delta'].clip(upper=0)
+    data['Ma_up'] = data['Up'].transform(lambda x: x.rolling(window=14).mean())
+    data['Ma_down'] = data['Down'].transform(lambda x: x.rolling(window=14).mean())
+    data['RSI'] = data['Ma_up'] / (data['Ma_up'] + data['Ma_down']) * 100
+    
+    # MACD 平滑異同移動平均線指標 (背離指標)
+    data['Exp1'] = data['Close'].transform(lambda x: x.ewm(span=12, adjust=False).mean())
+    data['Exp2'] = data['Close'].transform(lambda x: x.ewm(span=26, adjust=False).mean())
+    data['Macd'] = data['Exp1'] - data['Exp2'] # Moving Average Convergence Divergence
+    data['Macdsig'] = data['Macd'].transform(lambda x: x.ewm(span=9, adjust=False).mean()) # MACD Signal Line
+    data['Macdhist'] = data['Macd'] - data['Macdsig'] # MACD Histogram
+    
+    # Momentum 動能指標
+    data['Momentum'] = data['Close'].transform(lambda x: x.diff(periods=15))
+    
+    # ATR 真實波動幅度均值
+    data['High_low'] = data['High'] - data['Low']
+    data['High_close'] = abs(data['High'] - data['Close'].shift())
+    data['Low_close'] = abs(data['Low'] - data['Close'].shift())
+    data['Tr'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
+    data['ATR'] = data['Tr'].rolling(window=14).mean()
+    
+    # ROC 價格變動率
+    data['ROC'] = data['Close'].pct_change(periods=10) * 100
+    
+    # DMI 動向指標
+    data['+DM'] = np.where((data['High'] - data['High'].shift()) > (data['Low'].shift() - data['Low']), data['High'] - data['High'].shift(), 0)
+    data['-DM'] = np.where((data['Low'].shift() - data['Low']) > (data['High'] - data['High'].shift()), data['Low'].shift() - data['Low'], 0)
+    data['+DM'] = data['+DM'].where(data['+DM'] > data['-DM'], 0)
+    data['-DM'] = data['-DM'].where(data['-DM'] > data['+DM'], 0)
+    data['TR'] = data[['High_low', 'High_close', 'Low_close']].max(axis=1)
+    data['+DI'] = 100 * data['+DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
+    data['-DI'] = 100 * data['-DM'].rolling(window=14).sum() / data['TR'].rolling(window=14).sum()
+    data['ADX'] = abs((data['+DI'] - data['-DI']) / (data['+DI'] + data['-DI']) * 100).rolling(window=14).mean()
+    
+    # VWAP 成交量加權平均
+    data['Cumulative_Volume'] = data['Volume'].cumsum()
+    data['Cumulative_Volume_Price'] = (data['Close'] * data['Volume']).cumsum()
+    data['VWAP'] = data['Cumulative_Volume_Price'] / data['Cumulative_Volume']
+    
+    # AD-line 漲跌趨勢線指標
+    data['Advance'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x > 0 else 0)
+    data['Decline'] = data.groupby('Stock')['Close'].diff().apply(lambda x: 1 if x < 0 else 0)
+    data['AD_Line_pre'] = data['Advance'] - data['Decline']
+    data['AD_Line'] = data['AD_Line_pre'].cumsum()
+    
+    # EMA 指數平滑移動平均線
+    data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
+    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_12'] = data['Close'].ewm(span=12, adjust=False).mean()
+    data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
+    data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
+    data['EMA_26'] = data['Close'].ewm(span=26, adjust=False).mean()
+    # 前一天的EMA
+    data['EMA_9_prev'] = data['EMA_9'].shift(1)
+    data['EMA_12_prev'] = data['EMA_12'].shift(1)
+    data['EMA_20_prev'] = data['EMA_20'].shift(1)
+    data['EMA_50_prev'] = data['EMA_50'].shift(1)
+    data['EMA_26_prev'] = data['EMA_26'].shift(1)
+    #信號
+    data['912EMA_Signal'] = 0
+    data['2050EMA_Signal'] = 0
+    data['1226EMA_Signal'] = 0
+    # 計算 EMA 9 和 EMA 12 之間的交叉信號
+    data.loc[(data['EMA_9_prev'] < data['EMA_12_prev']) & (data['EMA_9'] > data['EMA_12']), '912EMA_Signal'] = 1
+    data.loc[(data['EMA_9_prev'] > data['EMA_12_prev']) & (data['EMA_9'] < data['EMA_12']), '912EMA_Signal'] = -1
+    # 計算 EMA 20 和 EMA 50 之間的交叉信號
+    data.loc[(data['EMA_20_prev'] < data['EMA_50_prev']) & (data['EMA_20'] > data['EMA_50']), '2050EMA_Signal'] = 1
+    data.loc[(data['EMA_20_prev'] > data['EMA_50_prev']) & (data['EMA_20'] < data['EMA_50']), '2050EMA_Signal'] = -1
+    # 計算 EMA 12 和 EMA 26 之間的交叉信號
+    data.loc[(data['EMA_12_prev'] < data['EMA_26_prev']) & (data['EMA_12'] > data['EMA_26']), '1226EMA_Signal'] = 1
+    data.loc[(data['EMA_12_prev'] > data['EMA_26_prev']) & (data['EMA_12'] < data['EMA_26']), '1226EMA_Signal'] = -1
+    
+    
+    # Stochastic Oscillator 隨機指標(KD)
+    data['Low_n'] = data['Low'].rolling(window=14).min() #常用週期14天
+    data['High_n'] = data['High'].rolling(window=14).max()
+    data['%K'] = 100 * ((data['Close'] - data['Low_n']) / (data['High_n'] - data['Low_n']))
+    data['%D3'] = data['%K'].rolling(window=3).mean() #短三日SMA
+    data['%D5'] = data['%K'].rolling(window=5).mean() #短五日SMA
+    data['KD_Signal_3'] = data['KD_Signal_5'] = 0
+    data.loc[(data['%K'].shift(1) < data['%D3'].shift(1)) & (data['%K'] > data['%D3']), 'KD_Signal_3'] = 1
+    data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3']), 'KD_Signal_3'] = -1
+    data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
+    data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
+st.dataframe(data)
+
 
 #加權指標
 # 由於指標會出現NA，所以要處理掉 (比如十天平均，前九天就不會有資料)
