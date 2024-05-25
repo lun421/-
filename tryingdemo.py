@@ -493,7 +493,7 @@ for stock in stocks:
     cols = new_df.columns.tolist()
     cols.insert(0, cols.pop(cols.index('ID')))
     new_df = new_df[cols]
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
+    results_df = pd.concat([new_df, results_df], ignore_index=True)
 
 st.write(results_df)
 
