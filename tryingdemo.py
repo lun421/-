@@ -33,6 +33,7 @@ with st.echo():
     from keras.models import Sequential, load_model
     from keras.layers import Dense, LSTM, Dropout, Input
     from keras.callbacks import ModelCheckpoint, LambdaCallback
+    import contextlib
     
     # 回測用
     from backtesting import Backtest, Strategy
