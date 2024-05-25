@@ -1,26 +1,3 @@
-import streamlit as st
-import numpy as np
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
-import yfinance as yf
-yf.pdr_override()
-import pandas_datareader.data as pdr
-from joblib import dump, load
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
-from collections import deque
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM, Dropout, Input
-from keras.callbacks import ModelCheckpoint, LambdaCallback
-from backtesting import Backtest, Strategy
-import io
-import contextlib
-
-
-
 st.title('LSTM Model Stock Backtesting')
 st.header('期末專題報告Demo · 第12組')
 st.markdown('組長：  \n徐睿延 110099029')
