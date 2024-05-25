@@ -163,23 +163,23 @@ st.dataframe(data)
 #加權指標
 # 由於指標會出現NA，所以要處理掉 (比如十天平均，前九天就不會有資料)
 # 給label，如果明天股價高於今天，就給label=1，反之=0
-code='''
-# Cleaning NA
-data.ffill(inplace=True)
-data.dropna(inplace=True)
-
-# Labeling
-data['Label'] = np.where(data['Close'].shift(-1) > data['Close'], 1, 0)
-y = data['Label']
-
-# Scaling
-indicator_candidate = data[['Volume', 'RSI', 'Macdhist','Momentum','ATR',
-                            'ROC','ADX','VWAP','AD_Line','EMA_9','EMA_50']]
-indicator_scaler = StandardScaler()
-indicator_candidate_scaled = indicator_scaler.fit_transform(indicator_candidate)
-'''
 st.header("Scaling Indicators", divider='grey')
-st.code(code, language='python')
+with st.echo():
+# Cleaning NA
+    data.ffill(inplace=True)
+    data.dropna(inplace=True)
+    
+    # Labeling
+    data['Label'] = np.where(data['Close'].shift(-1) > data['Close'], 1, 0)
+    y = data['Label']
+    
+    # Scaling
+    indicator_candidate = data[['Volume', 'RSI', 'Macdhist','Momentum','ATR',
+                                'ROC','ADX','VWAP','AD_Line','EMA_9','EMA_50']]
+    indicator_scaler = StandardScaler()
+    indicator_candidate_scaled = indicator_scaler.fit_transform(indicator_candidate)
+st.code('print(indicator_candidate_scaled)',language='python')
+st.dataframe(indicator_candidate_scaled)
 
 
 #指標隨機森林
@@ -197,8 +197,9 @@ for feature, importance in sorted_features:
     print(f'Feature: {feature}, Importance: {importance}')
 
 feature_data = data[selected_features+ ['Label']]
-
+print(feature_data)
 '''
+
 st.header("Picking Indicators using Random Forest", divider='grey')
 st.code(code, language='python')
 
