@@ -20,7 +20,15 @@ import io
 import contextlib
 
 
-st.markdown("""
+st.title("""
+<style>
+.centered-text {
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.header("""
 <style>
 .centered-text {
     text-align: center;
@@ -471,43 +479,32 @@ class LSTMBasedStrategy(Strategy):
         elif self.prediction[-1] == 0 and not self.position.is_short:
             self.sell()
 
-stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
-          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
+stock = 'MSFT'
 startdate = "2023-01-15"
 enddate = "2024-01-15"
 mem_days = 25
 results_df = pd.DataFrame([])
 
-for stock in stocks: 
-    df = yf.download(stock, start=startdate, end=enddate, progress=False)
-    df = calculate_selected_indicators(df)
-    df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+df = yf.download(stock, start=startdate, end=enddate, progress=False)
+df = calculate_selected_indicators(df)
+df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
+features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
 
-    Backtest_scaler = StandardScaler()
-    Backtest_scaler.fit(df[features])
-    scaled_features = Backtest_scaler.transform(df[features])
+Backtest_scaler = StandardScaler()
+Backtest_scaler.fit(df[features])
+scaled_features = Backtest_scaler.transform(df[features])
 
-    X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
+X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
 
-    predictions = model.predict(X)
-    predicted_classes = (predictions > 0.5).astype(int).flatten()
+predictions = model.predict(X)
+predicted_classes = (predictions > 0.5).astype(int).flatten()
 
-    full_predictions = np.zeros(len(df))
-    full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
+full_predictions = np.zeros(len(df))
+full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
-    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
-    results = bt.run()
-    new_df = pd.DataFrame([results])
-    new_df['ID'] = stock
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
-
-cols = results_df.columns.tolist()
-cols.insert(0, cols.pop(cols.index('ID')))
-results_df = results_df[cols]
-
-st.write(results_df)
+bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
+results = bt.run()
+bt.plot()
 
 
 
