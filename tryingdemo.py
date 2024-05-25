@@ -18,7 +18,7 @@ from keras.callbacks import ModelCheckpoint, LambdaCallback
 from backtesting import Backtest, Strategy
 import io
 import contextlib
-
+import mpld3
 #標題還有其他雜七雜八
 st.title('期末專題報告Demo：第12組')
 st.markdown('組長：  \n徐睿延 110099029')
@@ -498,6 +498,14 @@ for stock in stocks:
     new_df['ID'] = stock
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
+    fig = bt.plot()
+    html_str = mpld3.fig_to_html(fig)
+    st.components.v1.html(html_str, height=800)
 st.write(results_df)
+
+
+
+
+
 
 
