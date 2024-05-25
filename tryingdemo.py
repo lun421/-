@@ -490,10 +490,9 @@ for stock in stocks:
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
-    cols = new_df.columns.tolist()
-    cols.insert(0, cols.pop(cols.index('ID')))
-    new_df = new_df[cols]
-    results_df = pd.concat([new_df, results_df], ignore_index=True)
+    new_df['ID'] = stock
+    new_df.insert(0, 'ID', new_df.pop('ID'))  
+    results_df = pd.concat([results_df, new_df], ignore_index=True)
 
 st.write(results_df)
 
