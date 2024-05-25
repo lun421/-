@@ -278,25 +278,19 @@ st.dataframe(indicator_candidate_scaled)
 #selected_features = ['Volume', 'RSI', 'Macdhist', 'EMA_3', 'EMA_50']
 code = '''
 indicator_model = RandomForestClassifier()
-indicator_model.fit(indicator_candidate_scaled, y)
-feature_importances = indicator_model.feature_importances_
-feature_names = indicator_candidate.columns
 
-features = list(zip(feature_names, feature_importances))
-sorted_features = sorted(features, key=lambda x: x[1], reverse=True)
+# 使用 RFE 選取前五個最重要的特徵
+selector = RFE(indicator_model, n_features_to_select=5, step=1)
+selector = selector.fit(indicator_candidate_scaled, y)
+selected_features = selector.support_
+print("Selected features:", indicator_candidate.columns[selected_features])
+feature_data = data[indicator_candidate.columns[selected_features].tolist() + ['Label']]
 
-for feature, importance in sorted_features:
-    print(f'Feature: {feature}, Importance: {importance}')
-
-feature_data = data[selected_features+ ['Label']]
-print(feature_data)
 '''
 st.header("Picking Indicators using Random Forest", divider='grey')
 st.code(code, language='python')
-code = '''
-['Volume', 'RSI', 'Macdhist', 'EMA_3', 'EMA_50']
-'''
-st.code(code,language='python')
+st.code(f"Selected features: Index(['Volume', 'RSI', 'Macdhist', 'EMA_3', 'EMA_50'], dtype='object')")
+
 
 #pre modeling
 code = '''
