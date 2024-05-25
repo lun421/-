@@ -496,6 +496,3 @@ for stock in stocks:
 
 st.write(results_df)
 
-
-
-
