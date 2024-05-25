@@ -59,7 +59,7 @@ with st.echo():
          for stock in stocks],
         axis=0
     )
-
+st.code('print(data)',language='python')
 st.dataframe(data)
 
 
@@ -157,6 +157,7 @@ with st.echo():
     data.loc[(data['%K'].shift(1) > data['%D3'].shift(1)) & (data['%K'] < data['%D3']), 'KD_Signal_3'] = -1
     data.loc[(data['%K'].shift(1) < data['%D5'].shift(1)) & (data['%K'] > data['%D5']), 'KD_Signal_5'] = 1
     data.loc[(data['%K'].shift(1) > data['%D5'].shift(1)) & (data['%K'] < data['%D5']), 'KD_Signal_5'] = -1
+st.code('print(data)',language='python')
 st.dataframe(data)
 
 
@@ -199,10 +200,12 @@ for feature, importance in sorted_features:
 feature_data = data[selected_features+ ['Label']]
 print(feature_data)
 '''
-
 st.header("Picking Indicators using Random Forest", divider='grey')
 st.code(code, language='python')
-
+code = '''
+['Volume', 'RSI', 'Macdhist', 'EMA_3', 'EMA_50']
+'''
+st.code(code,language='python')
 
 #pre modeling
 code = '''
