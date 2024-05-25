@@ -1,3 +1,5 @@
+import streamlit as st
+
 st.title('LSTM Model Stock Backtesting')
 st.header('期末專題報告Demo · 第12組')
 st.markdown('組長：  \n徐睿延 110099029')
@@ -34,8 +36,7 @@ with st.echo():
     # 回測用
     from backtesting import Backtest, Strategy
     
-    #建立Web應用程式用
-    import streamlit as st
+
 
 
 
