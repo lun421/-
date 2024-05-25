@@ -487,13 +487,15 @@ for stock in stocks:
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
 
+
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
     results = bt.run()
     new_df = pd.DataFrame([results])
     new_df['ID'] = stock
-    new_df.insert(0, 'ID', new_df.pop('ID'))  
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
-st.dataframe(results_df)
+cols = results_df.columns.tolist()
+cols.insert(0, cols.pop(cols.index('ID')))
+results_df = results_df[cols]
 
-bt.plot()
+st.dataframe(results_df)
