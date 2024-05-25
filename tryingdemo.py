@@ -494,6 +494,6 @@ for stock in stocks:
     new_df.insert(0, 'ID', new_df.pop('ID'))  
     results_df = pd.concat([results_df, new_df], ignore_index=True)
 
-st.write(results_df)
+st.dataframe(results_df)
 
 bt.plot()
