@@ -27,40 +27,40 @@ st.markdown('組長：  \n徐睿延 110099029')
 st.markdown(f"組員：  \n陳冠倫 110072250  \n陳亮廷 110072224  \n宋宇然 110072206  \n張稚婕 111042013  \n賀守聖 111042038")
 
 # import
-code = '''
-import numpy as np
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
-import yfinance as yf
-yf.pdr_override()
-import pandas_datareader.data as pdr
-
-# 指標選擇用
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-
-# 模型資料處理用
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
-from joblib import dump, load
-
-#模型窗口設置用
-from collections import deque
-
-# 模型建立與訓練用
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM, Dropout, Input
-from keras.callbacks import ModelCheckpoint, LambdaCallback
-
-# 回測用
-from backtesting import Backtest, Strategy
-
-#建立Web應用程式用
-import streamlit as st
-'''
 st.header("Importing Modules", divider='grey')
-st.code(code, language='python')
+with st.echo():
+    import numpy as np
+    import pandas as pd
+    import os
+    import matplotlib.pyplot as plt
+    import yfinance as yf
+    yf.pdr_override()
+    import pandas_datareader.data as pdr
+    
+    # 指標選擇用
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.feature_selection import RFE
+    
+    # 模型資料處理用
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import train_test_split, cross_val_score
+    from joblib import dump, load
+    
+    #模型窗口設置用
+    from collections import deque
+    
+    # 模型建立與訓練用
+    from keras.models import Sequential, load_model
+    from keras.layers import Dense, LSTM, Dropout, Input
+    from keras.callbacks import ModelCheckpoint, LambdaCallback
+    
+    # 回測用
+    from backtesting import Backtest, Strategy
+    
+    #建立Web應用程式用
+    import streamlit as st
+
+
 
 #讀stock
 #concat是將所有的股票數據按行合併成一個DF
