@@ -81,9 +81,27 @@ data = pd.concat(
     axis=0
 )
 '''
+stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
+          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
+          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC', 'NFLX']
+
+startdate = "2021-01-01"
+enddate = "2023-01-01"
+
+data = pd.concat(
+    [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
+     for stock in stocks],
+    axis=0
+)
 st.header("Reading Stock Data for Modeling", divider='grey')
 st.markdown("Choosing Top25 Companies in S&P500 by Index Weight")
 st.code(code, language='python')
+
+st.dataframe(data)
+
+
+
+
 
 #計算指標
 code = '''
