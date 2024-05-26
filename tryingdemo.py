@@ -396,7 +396,7 @@ def calculate_selected_indicators(data):
     macd = exp1 - exp2
     data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
 
-    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_3'] = data['Close'].ewm(span=9, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
     data.dropna(inplace=True)
@@ -435,7 +435,7 @@ for stock in stocks:
     df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
     df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+    features = ['RSI', 'Macdhist', 'EMA_3', 'EMA_50', 'Volume']  
 
     Backtest_scaler = StandardScaler()
     Backtest_scaler.fit(df[features])
