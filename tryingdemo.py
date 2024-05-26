@@ -324,7 +324,7 @@ for the_mem_day in mem_days:
                         model.add(Dense(1, activation='sigmoid'))
 
                         # 指定模型之優化器、損失函數和評估指標
-                        model.compile(optimizer='adam', loss='Focal Loss', metrics=['accuracy'])
+                        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
                     
                         # 配置模型保存的路徑，這裡先暫存，稍後重命名
