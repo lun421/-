@@ -24,7 +24,6 @@ with st.echo():
     # 模型資料處理用
     from sklearn.preprocessing import StandardScaler
     from sklearn.model_selection import train_test_split
-    from joblib import dump, load
     
     #模型窗口設置用
     from collections import deque
@@ -253,7 +252,6 @@ code = '''
 def pre_model_data_processing(feature_data, mem_days):
     scaler = StandardScaler()
     sca_X = scaler.fit_transform(feature_data.iloc[:,:-1])
-    dump(scaler, 'scaler.joblib')
 
     mem = mem_days
     deq = deque(maxlen=mem)
