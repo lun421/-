@@ -298,7 +298,7 @@ for the_mem_day in mem_days:
                         current_iteration += 1
                         print(f"Progress: {current_iteration}/{total_iterations}")
 
-                        # 輸入整理好的xy資料，訓練80%測試20%
+                        # 輸入整理好的xy資料，訓練70%
                         X, y = pre_model_data_processing(feature_data, the_mem_day)
                         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.3)
 
