@@ -23,7 +23,7 @@ with st.echo():
     
     # 模型資料處理用
     from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split, cross_val_score
+    from sklearn.model_selection import train_test_split
     from joblib import dump, load
     
     #模型窗口設置用
