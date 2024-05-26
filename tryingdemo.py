@@ -340,7 +340,7 @@ for the_mem_day in mem_days:
                         
                         
                         # 以不同的批量訓練模型
-                        history = model.fit(X_train, y_train, batch_size=the_batch_size, epochs=10, validation_data=(X_test, y_test), callbacks=[checkpoint])
+                        history = model.fit(X_train, y_train, batch_size=the_batch_size, epochs=50, validation_data=(X_test, y_test), callbacks=[checkpoint])
                         
                         best_val_acc = max(history.history['val_accuracy'])
                         if best_val_acc > best_accuracy:
