@@ -519,6 +519,14 @@ for stock in stocks:
 st.header("Backtesting Stocks Results", divider='grey')
 st.code(code, language='python')
 df = pd.read_csv('results.csv')
+cols = list(df.columns)
+
+cols = [cols[-1]] + cols[:-1]
+
+df = df[cols]
+del df['Unnamed: 0']
+
+
 st.dataframe(df)
 
 
