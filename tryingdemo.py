@@ -527,7 +527,6 @@ del df['Unnamed: 0']
 st.dataframe(df)
 
 st.title('Stock Win Rates')
-st.write("This chart shows the win rate of each stock strategy.")
 fig, ax = plt.subplots(figsize=(10, 6))  # 使用plt.subplots而不是plt.figure来更好地控制fig
 ax.bar(df['ID'], df['Win Rate [%]'], color='teal')
 ax.set_title('Win Rate of Each Stock')
@@ -538,7 +537,6 @@ plt.xticks(rotation=45)
 st.pyplot(fig)
 
 st.title('Stock Strategy Returns')
-st.write("Below is a chart that displays the return percentage of each stock strategy based on the given strategy ID.")
 fig, ax = plt.subplots(figsize=(10, 6))  
 ax.bar(df['ID'], df['Return [%]'], color='teal')
 ax.set_title('Return of Each Stock')
