@@ -414,7 +414,6 @@ def calculate_selected_indicators(data):
 
     data.dropna(inplace=True)
     return data
-    return data
 '''
 st.header("Backtesting Stocks' Indicators", divider='grey')
 st.code(code, language='python')
