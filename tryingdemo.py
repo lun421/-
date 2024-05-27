@@ -476,7 +476,7 @@ class LSTMBasedStrategy(Strategy):
         elif self.position.is_short and self.prediction[-1] == 1:
             self.buy(size=abs(self.position.size))
 '''
-st.header("Model Backtesting", divider='grey')
+st.header("Model Backtesting Srategy", divider='grey')
 st.code(code, language='python')
 
 #testing all stocks
@@ -509,7 +509,7 @@ for stock in stocks:
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)]
     
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
-        results = bt.run()
+    results = bt.run()
     
     #將個別的結果放入results_df
     new_df = pd.DataFrame([results])
@@ -517,7 +517,7 @@ for stock in stocks:
     results_df = pd.concat([results_df, new_df], ignore_index=True)
     print(results_df)
 '''
-st.header("Backtesting Stocks", divider='grey')
+st.header("Backtesting Stocks Results", divider='grey')
 st.code(code, language='python')
 df = pd.read_csv('results.csv')
 st.dataframe(df)
