@@ -528,7 +528,7 @@ st.code(code, language='python')
 
 
 df = pd.read_csv('results.csv')
-
+st.dataframe(df)
 
 
 
