@@ -382,6 +382,21 @@ except Exception as e:
 
 #def stock indicator
 code = '''
+#設定標的
+stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
+          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
+          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC','NFLX']
+#設定日期範圍
+startdate = "2023-01-15"
+enddate = "2024-01-15"
+results_df=pd.DataFrame([])
+'''
+st.header("load stocks to test", divider='grey')
+st.code(code, language='python')
+
+
+code='''
+#計算指標放進data
 def calculate_selected_indicators(data):
     delta = data['Close'].diff()
     up, down = delta.clip(lower=0), -delta.clip(upper=0)
@@ -394,10 +409,11 @@ def calculate_selected_indicators(data):
     macd = exp1 - exp2
     data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
 
-    data['EMA_3'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
     data.dropna(inplace=True)
+    return data
     return data
 '''
 st.header("Backtesting Stocks' Indicators", divider='grey')
@@ -408,36 +424,80 @@ st.code(code, language='python')
 code = '''
 class LSTMBasedStrategy(Strategy):
     def init(self):
+        self.consecutive_buys = 0 
+        self.consecutive_sells = 0 
+        self.total_invested = 0 # 記錄總投資金額
+        self.total_shorted = 0 #  記錄總做空金額
         self.prediction = self.I(lambda x: x, full_predictions)
 
     def next(self):
-        if self.prediction[-1] == 1 and not self.position.is_long:
-            self.buy()
-        elif self.prediction[-1] == 0 and not self.position.is_short:
-            self.sell()
+        current_price = self.data.Close[-1]
+        available_equity = self.equity * 0.2  # 可交易資金(總資產的20%)
+        initial_position_size = max(1, int(self.equity / 10 / current_price))  # Ensure size is at least 1
+
+        if self.prediction[-1] == 1:
+            if self.position.is_long:
+                additional_size = int(min(self.position.size * 0.2, (available_equity - self.total_invested) / current_price))
+                if additional_size > 0 and self.equity - self.total_invested >= additional_size * current_price:
+                    self.buy(size=additional_size)
+                    self.total_invested += additional_size * current_price
+            else:
+                if initial_position_size > 0 and self.equity - self.total_invested >= initial_position_size * current_price:
+                    self.buy(size=initial_position_size)
+                    self.total_invested = initial_position_size * current_price
+                    self.consecutive_buys = 1
+            self.consecutive_sells = 0
+            self.total_shorted = 0
+
+        elif self.prediction[-1] == 0:
+            if self.position.is_short:
+                additional_size = int(min(abs(self.position.size) * 0.2, (available_equity - self.total_shorted) / current_price))
+                if additional_size > 0 and self.equity - self.total_shorted >= additional_size * current_price:
+                    self.sell(size=additional_size)
+                    self.total_shorted += additional_size * current_price
+            else:
+                if initial_position_size > 0 and self.equity - self.total_shorted >= initial_position_size * current_price:
+                    self.sell(size=initial_position_size)
+                    self.total_shorted = initial_position_size * current_price
+                    self.consecutive_sells = 1
+            self.consecutive_buys = 0
+            self.total_invested = 0
+
+        else:
+            # Reset counters and investment totals on signals that are not buy or sell
+            self.consecutive_buys = 0
+            self.consecutive_sells = 0
+            self.total_invested = 0
+            self.total_shorted = 0
+
+        # Close positions if opposite signals or conditions require
+        if self.position.is_long and self.prediction[-1] == 0:
+            self.sell(size=self.position.size)
+        elif self.position.is_short and self.prediction[-1] == 1:
+            self.buy(size=abs(self.position.size))
 '''
 st.header("Model Backtesting", divider='grey')
 st.code(code, language='python')
 
 #testing all stocks
 code = '''
-stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B', 
-          'LLY', 'JPM', 'AVGO', 'XOM', 'UNH', 'V', 'TSLA', 'PG', 'MA', 
-          'JNJ', 'HD', 'MRK', 'COST', 'ABBV', 'CVX', 'CRM', 'BAC','NFLX']
-startdate = "2023-01-15"
-enddate = "2024-01-15"
-mem_days = 25
-results_df=pd.DataFrame([])
+for stock in stocks:
+    df = pd.concat(
+        [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
+        ],
+        axis=0)
 
-for stock in stocks: 
-    df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
-    df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-    features = ['RSI', 'Macdhist', 'EMA_3', 'EMA_50', 'Volume']  
 
-    Backtest_scaler = StandardScaler()
-    Backtest_scaler.fit(df[features])
-    scaled_features = Backtest_scaler.transform(df[features])
+    df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
+
+    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+
+    scaler = StandardScaler()
+    scaler.fit(df[features])
+    scaled_features = scaler.transform(df[features])
+
+    mem_days = 25  
 
     X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
 
@@ -445,25 +505,22 @@ for stock in stocks:
     predicted_classes = (predictions > 0.5).astype(int).flatten()
 
     full_predictions = np.zeros(len(df))
-    full_predictions[mem_days-1:mem_days-1+len(predicted_classes)] = predicted_classes
-
-    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.0425)
-    results = bt.run()
-    new_df = pd.DataFrame([results])
-    new_df['ID'] = stock
-    new_df.insert(0, 'ID', new_df.pop('ID'))
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
-
+    full_predictions[mem_days-1:mem_days-1+len(predicted_classes)]
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
 
 
-
 code = '''
-#backtest result
+bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
+    results = bt.run()
+    
+    #將個別的結果放入results_df
+    new_df = pd.DataFrame([results])
+    new_df['ID']=stock
+    results_df = pd.concat([results_df, new_df], ignore_index=True)
 '''
-st.header("Backtesting Results Analyze", divider='grey')
+st.header("Backtesting Results", divider='grey')
 st.code(code, language='python')
 
 
