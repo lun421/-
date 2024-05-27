@@ -510,12 +510,12 @@ for stock in stocks:
     
     bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
         results = bt.run()
-        
-        #將個別的結果放入results_df
-        new_df = pd.DataFrame([results])
-        new_df['ID']=stock
-        results_df = pd.concat([results_df, new_df], ignore_index=True)
-        print(results_df)
+    
+    #將個別的結果放入results_df
+    new_df = pd.DataFrame([results])
+    new_df['ID']=stock
+    results_df = pd.concat([results_df, new_df], ignore_index=True)
+    print(results_df)
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
