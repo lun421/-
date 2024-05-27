@@ -482,7 +482,6 @@ st.code(code, language='python')
 #testing all stocks
 code = '''
 for stock in stocks:
-    print(f"Processing {stock}...")
     df = pd.concat(
         [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
         ],
@@ -501,8 +500,6 @@ for stock in stocks:
     mem_days = 25  
 
     X = np.array([scaled_features[i:i + mem_days] for i in range(len(scaled_features) - mem_days + 1)])
-
-    print("Shape of X:", X.shape) 
 
     predictions = model.predict(X)
     predicted_classes = (predictions > 0.5).astype(int).flatten()
