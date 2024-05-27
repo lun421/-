@@ -389,7 +389,7 @@ stocks = ['MSFT', 'AAPL', 'NVDA', 'AMZN', 'META', 'GOOG', 'BRK-B',
 #設定日期範圍
 startdate = "2023-01-15"
 enddate = "2024-01-15"
-results_df=pd.DataFrame([])
+
 '''
 st.header("load stocks to test", divider='grey')
 st.code(code, language='python')
@@ -512,6 +512,7 @@ st.code(code, language='python')
 
 
 code = '''
+results_df=pd.DataFrame([])
 bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
     results = bt.run()
     
@@ -519,13 +520,14 @@ bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
     new_df = pd.DataFrame([results])
     new_df['ID']=stock
     results_df = pd.concat([results_df, new_df], ignore_index=True)
+    print(results_df)
 '''
 st.header("Backtesting Results", divider='grey')
 st.code(code, language='python')
 
 
 
-
+df = pd.read_csv('results.csv')
 
 
 
