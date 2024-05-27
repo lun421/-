@@ -537,5 +537,16 @@ ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.xticks(rotation=45) 
 st.pyplot(fig)
 
+st.title('Stock Strategy Returns')
+st.write("Below is a chart that displays the return percentage of each stock strategy based on the given strategy ID.")
+fig, ax = plt.subplots(figsize=(10, 6))  
+ax.bar(df['ID'], df['Return [%]'], color='teal')
+ax.set_title('Return of Each Stock')
+ax.set_xlabel('Strategy ID')
+ax.set_ylabel('Return [%]')
+ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.xticks(rotation=45)  
+st.pyplot(fig)
+
 
 
