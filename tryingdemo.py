@@ -23,8 +23,7 @@ with st.echo():
     
     # 模型資料處理用
     from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split, cross_val_score
-    from joblib import dump, load
+    from sklearn.model_selection import train_test_split
     
     #模型窗口設置用
     from collections import deque
@@ -253,7 +252,6 @@ code = '''
 def pre_model_data_processing(feature_data, mem_days):
     scaler = StandardScaler()
     sca_X = scaler.fit_transform(feature_data.iloc[:,:-1])
-    dump(scaler, 'scaler.joblib')
 
     mem = mem_days
     deq = deque(maxlen=mem)
@@ -300,7 +298,7 @@ for the_mem_day in mem_days:
                         current_iteration += 1
                         print(f"Progress: {current_iteration}/{total_iterations}")
 
-                        # 輸入整理好的xy資料，訓練80%測試20%
+                        # 輸入整理好的xy資料，訓練70%
                         X, y = pre_model_data_processing(feature_data, the_mem_day)
                         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.3)
 
@@ -326,7 +324,7 @@ for the_mem_day in mem_days:
                         model.add(Dense(1, activation='sigmoid'))
 
                         # 指定模型之優化器、損失函數和評估指標
-                        model.compile(optimizer='adam', loss='Focal Loss', metrics=['accuracy'])
+                        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
                     
                         # 配置模型保存的路徑，這裡先暫存，稍後重命名
@@ -342,7 +340,7 @@ for the_mem_day in mem_days:
                         
                         
                         # 以不同的批量訓練模型
-                        history = model.fit(X_train, y_train, batch_size=the_batch_size, epochs=10, validation_data=(X_test, y_test), callbacks=[checkpoint])
+                        history = model.fit(X_train, y_train, batch_size=the_batch_size, epochs=50, validation_data=(X_test, y_test), callbacks=[checkpoint])
                         
                         best_val_acc = max(history.history['val_accuracy'])
                         if best_val_acc > best_accuracy:
@@ -396,7 +394,7 @@ def calculate_selected_indicators(data):
     macd = exp1 - exp2
     data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
 
-    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_3'] = data['Close'].ewm(span=9, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
     data.dropna(inplace=True)
@@ -435,7 +433,7 @@ for stock in stocks:
     df = yf.download(stock, start=startdate, end=enddate, progress=False)
     df = calculate_selected_indicators(df)
     df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
-    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+    features = ['RSI', 'Macdhist', 'EMA_3', 'EMA_50', 'Volume']  
 
     Backtest_scaler = StandardScaler()
     Backtest_scaler.fit(df[features])
@@ -459,3 +457,21 @@ for stock in stocks:
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
+
+
+
+code = '''
+#backtest result
+'''
+st.header("Backtesting Results Analyze", divider='grey')
+st.code(code, language='python')
+
+
+
+
+
+
+
+
+
+
