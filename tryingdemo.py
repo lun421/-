@@ -409,7 +409,7 @@ def calculate_selected_indicators(data):
     macd = exp1 - exp2
     data['Macdhist'] = macd - macd.ewm(span=9, adjust=False).mean()
 
-    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_3'] = data['Close'].ewm(span=3, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
     data.dropna(inplace=True)
@@ -491,7 +491,7 @@ for stock in stocks:
 
     df['Label'] = (df['Close'].shift(-1) > df['Close']).astype(int)
 
-    features = ['RSI', 'Macdhist', 'EMA_9', 'EMA_50', 'Volume']  
+    features = ['RSI', 'Macdhist', 'EMA_3', 'EMA_50', 'Volume']  
 
     scaler = StandardScaler()
     scaler.fit(df[features])
