@@ -481,6 +481,7 @@ st.code(code, language='python')
 
 #testing all stocks
 code = '''
+results_df=pd.DataFrame([])
 for stock in stocks:
     df = pd.concat(
         [yf.download(stock, start=startdate, end=enddate, progress=False).assign(Stock=stock)
@@ -506,27 +507,18 @@ for stock in stocks:
 
     full_predictions = np.zeros(len(df))
     full_predictions[mem_days-1:mem_days-1+len(predicted_classes)]
+    
+    bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
+        results = bt.run()
+        
+        #將個別的結果放入results_df
+        new_df = pd.DataFrame([results])
+        new_df['ID']=stock
+        results_df = pd.concat([results_df, new_df], ignore_index=True)
+        print(results_df)
 '''
 st.header("Backtesting Stocks", divider='grey')
 st.code(code, language='python')
-
-
-code = '''
-results_df=pd.DataFrame([])
-bt = Backtest(df, LSTMBasedStrategy, cash=10000, commission=.002)
-    results = bt.run()
-    
-    #將個別的結果放入results_df
-    new_df = pd.DataFrame([results])
-    new_df['ID']=stock
-    results_df = pd.concat([results_df, new_df], ignore_index=True)
-    print(results_df)
-'''
-st.header("Backtesting Results", divider='grey')
-st.code(code, language='python')
-
-
-
 df = pd.read_csv('results.csv')
 st.dataframe(df)
 
